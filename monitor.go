@@ -7,8 +7,6 @@ import (
 	"github.com/haroflow/go-service-monitor/lib"
 )
 
-var serviceMonitor ServiceMonitor
-
 type ServiceMonitor struct {
 	// TODO Mutex? RWMutex? Save directly to database?
 	LastCheck  time.Time
@@ -19,49 +17,80 @@ type ServiceMonitor struct {
 
 type HTTPCheck struct {
 	Address string
-	Status  bool // TODO split configuration from execution status
-	// Timeout int
+	Status  bool
+	Timeout int
 	// ExpectedStatusCode int
 }
 
 type TCPCheck struct {
 	Address string
 	Port    int16
-	Status  bool // TODO split configuration from execution status
-	// Timeout int
+	Status  bool
+	Timeout int
 }
 
 type DNSCheck struct {
 	Address string
-	Status  bool // TODO split configuration from execution status
+	Status  bool
 	// Server string
 }
 
-func monitor() { // TODO parallelize
+func getServiceMonitorFromConfig(config Config) ServiceMonitor {
+	serviceMonitor := ServiceMonitor{}
+
+	for _, http := range config.Monitors.HTTP {
+		var httpCheck = HTTPCheck{
+			Address: http.Address,
+			Timeout: http.Timeout,
+			Status:  false,
+		}
+		serviceMonitor.HTTPChecks = append(serviceMonitor.HTTPChecks, httpCheck)
+	}
+	for _, tcp := range config.Monitors.TCP {
+		var tcpCheck = TCPCheck{
+			Address: tcp.Address,
+			Port:    tcp.Port,
+			Timeout: tcp.Timeout,
+			Status:  false,
+		}
+		serviceMonitor.TCPChecks = append(serviceMonitor.TCPChecks, tcpCheck)
+	}
+	for _, dns := range config.Monitors.DNS {
+		var dnsCheck = DNSCheck{
+			Address: dns.Address,
+			Status:  false,
+		}
+		serviceMonitor.DNSChecks = append(serviceMonitor.DNSChecks, dnsCheck)
+	}
+
+	return serviceMonitor
+}
+
+func monitor(serviceMonitor *ServiceMonitor) { // TODO parallelize
 	for {
 		serviceMonitor.LastCheck = time.Now()
 
 		for i := range serviceMonitor.HTTPChecks {
-			httpCheck := &serviceMonitor.HTTPChecks[i]
-			err := lib.TestHTTPEndpoint(httpCheck.Address)
+			http := &serviceMonitor.HTTPChecks[i]
+			err := lib.TestHTTPEndpoint(http.Address, http.Timeout)
 			if err != nil {
-				httpCheck.Status = false
-				log.Printf("HTTP FAIL | %+v | ERR: %v\n", httpCheck, err)
+				http.Status = false
+				log.Printf("HTTP FAIL | %+v | ERR: %v\n", http, err)
 			} else {
-				httpCheck.Status = true
-				log.Printf("HTTP OK | %+v", httpCheck)
+				http.Status = true
+				log.Printf("HTTP OK | %+v", http)
 			}
 		}
 
 		for i := range serviceMonitor.TCPChecks {
-			tcpCheck := &serviceMonitor.TCPChecks[i]
-			err := lib.TestTCPEndpoint(tcpCheck.Address, tcpCheck.Port)
+			tcp := &serviceMonitor.TCPChecks[i]
+			err := lib.TestTCPEndpoint(tcp.Address, tcp.Port, tcp.Timeout)
 			if err != nil {
-				tcpCheck.Status = false
-				log.Printf("TCP FAIL | %+v | ERR: %v\n", tcpCheck, err)
+				tcp.Status = false
+				log.Printf("TCP FAIL | %+v | ERR: %v\n", tcp, err)
 			} else {
-				tcpCheck.Status = true
-				log.Printf("TCP OK | %+v", tcpCheck)
+				tcp.Status = true
+				log.Printf("TCP OK | %+v", tcp)
 			}
 		}
 

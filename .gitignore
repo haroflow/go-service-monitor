@@ -19,3 +19,7 @@
 
 # Go workspace file
 go.work
+
+# go-service-monitor configuration files
+config.json
+sample.config.json

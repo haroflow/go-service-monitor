@@ -10,12 +10,12 @@ import (
 
 // TestHTTPEndpoint sends a GET request to the specified address, with a
 // default 10 second timeout, and expects a 200 OK response.
-func TestHTTPEndpoint(address string) error {
+func TestHTTPEndpoint(address string, timeoutSeconds int) error {
 	if !strings.HasPrefix(address, "http://") && !strings.HasPrefix(address, "https://") {
 		return fmt.Errorf("address should begin with http:// or https://")
 	}
 
-	timeout := time.Duration(10 * time.Second)
+	timeout := time.Duration(timeoutSeconds) * time.Second
 	client := http.Client{
 		Timeout: timeout,
 	}
@@ -35,8 +35,8 @@ func TestHTTPEndpoint(address string) error {
 
 // TestTCPEndpoint sends a TCP request to the specified address and port,
 // with a default timeout of 10 seconds.
-func TestTCPEndpoint(address string, port int16) error {
-	timeout := time.Duration(10 * time.Second)
+func TestTCPEndpoint(address string, port int16, timeoutSeconds int) error {
+	timeout := time.Duration(timeoutSeconds) * time.Second
 	dialer := net.Dialer{
 		Timeout: timeout,
 	}

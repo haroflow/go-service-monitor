@@ -7,6 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type IndexController struct {
+	serviceMonitor ServiceMonitor
+}
+
 type indexVM struct {
 	LastCheck time.Time
 	Services  []serviceStatusVM
@@ -46,13 +50,13 @@ func newIndexViewModel(sm ServiceMonitor) []serviceStatusVM {
 	return vm
 }
 
-func index(c *gin.Context) {
+func (ctrl *IndexController) index(c *gin.Context) {
 	c.HTML(200, "index.html", indexVM{
-		LastCheck: serviceMonitor.LastCheck,
-		Services:  newIndexViewModel(serviceMonitor),
+		LastCheck: ctrl.serviceMonitor.LastCheck,
+		Services:  newIndexViewModel(ctrl.serviceMonitor),
 	})
 }
 
-func indexJson(c *gin.Context) {
-	c.IndentedJSON(200, serviceMonitor)
+func (ctrl *IndexController) indexJson(c *gin.Context) {
+	c.IndentedJSON(200, ctrl.serviceMonitor)
 }
