@@ -10,12 +10,24 @@ Monitors for HTTP/HTTPS (200 OK), TCP ports and DNS IP queries.
 
 # How to use
 
+## Setup
+
+```
+git clone https://github.com/haroflow/go-service-monitor.git
+
+cd go-service-monitor
+go run .
+cp sample.config.json config.json
+
+cd frontend
+npm install
+```
+
 ## Development
 
 1. Start frontend:
 	```
 	cd go-service-monitor/frontend
-	npm install # if needed
 	npm run dev
 	```
 
@@ -34,7 +46,6 @@ Monitors for HTTP/HTTPS (200 OK), TCP ports and DNS IP queries.
 1. Build frontend to `go-service-monitor/frontend/dist`:
 	```
 	cd go-service-monitor/frontend
-	npm install # if needed
 	npm run build
 	```
 
