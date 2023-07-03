@@ -9,29 +9,32 @@ import (
 
 type ServiceMonitor struct {
 	// TODO Mutex? RWMutex? Save directly to database?
-	LastCheck  time.Time
-	HTTPChecks []HTTPCheck
-	TCPChecks  []TCPCheck
-	DNSChecks  []DNSCheck
+	LastCheck  time.Time   `json:"lastCheck"`
+	HTTPChecks []HTTPCheck `json:"httpChecks"`
+	TCPChecks  []TCPCheck  `json:"tcpChecks"`
+	DNSChecks  []DNSCheck  `json:"dnsChecks"`
 }
 
 type HTTPCheck struct {
-	Address string
-	Status  bool
-	Timeout int
+	DisplayName string `json:"displayName"`
+	Address     string `json:"address"`
+	Status      bool   `json:"status"`
+	Timeout     int    `json:"timeout"`
 	// ExpectedStatusCode int
 }
 
 type TCPCheck struct {
-	Address string
-	Port    int16
-	Status  bool
-	Timeout int
+	DisplayName string `json:"displayName"`
+	Address     string `json:"address"`
+	Port        int16  `json:"port"`
+	Status      bool   `json:"status"`
+	Timeout     int    `json:"timeout"`
 }
 
 type DNSCheck struct {
-	Address string
-	Status  bool
+	DisplayName string `json:"displayName"`
+	Address     string `json:"address"`
+	Status      bool   `json:"status"`
 	// Server string
 }
 
@@ -40,25 +43,28 @@ func getServiceMonitorFromConfig(config Config) ServiceMonitor {
 
 	for _, http := range config.Monitors.HTTP {
 		var httpCheck = HTTPCheck{
-			Address: http.Address,
-			Timeout: http.Timeout,
-			Status:  false,
+			DisplayName: http.DisplayName,
+			Address:     http.Address,
+			Timeout:     http.Timeout,
+			Status:      false,
 		}
 		serviceMonitor.HTTPChecks = append(serviceMonitor.HTTPChecks, httpCheck)
 	}
 	for _, tcp := range config.Monitors.TCP {
 		var tcpCheck = TCPCheck{
-			Address: tcp.Address,
-			Port:    tcp.Port,
-			Timeout: tcp.Timeout,
-			Status:  false,
+			DisplayName: tcp.DisplayName,
+			Address:     tcp.Address,
+			Port:        tcp.Port,
+			Timeout:     tcp.Timeout,
+			Status:      false,
 		}
 		serviceMonitor.TCPChecks = append(serviceMonitor.TCPChecks, tcpCheck)
 	}
 	for _, dns := range config.Monitors.DNS {
 		var dnsCheck = DNSCheck{
-			Address: dns.Address,
-			Status:  false,
+			DisplayName: dns.DisplayName,
+			Address:     dns.Address,
+			Status:      false,
 		}
 		serviceMonitor.DNSChecks = append(serviceMonitor.DNSChecks, dnsCheck)
 	}

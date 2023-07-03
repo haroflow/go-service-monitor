@@ -1,15 +1,16 @@
 package main
 
 import (
-	"encoding/json"
+	"embed"
+	"io/fs"
 	"log"
-	"os"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-const configPath string = "config.json"
-const sampleConfigPath string = "sample.config.json"
+//go:embed frontend/dist
+var frontendFolder embed.FS
 
 func main() {
 	// TODO email configuration
@@ -20,58 +21,25 @@ func main() {
 
 	go monitor(&serviceMonitor)
 
-	controller := IndexController{
-		serviceMonitor: serviceMonitor,
+	controller := ApiController{
+		serviceMonitor: &serviceMonitor,
 	}
 
 	router := gin.Default()
-	router.LoadHTMLGlob("templates/*")
-	router.GET("/", controller.index)
-	router.GET("/json", controller.indexJson)
+	router.NoRoute(serveFiles())
+	router.GET("/api", controller.indexJson)
+
 	router.Run() // TODO add port option
 }
 
-func createSampleConfig() {
-	file, err := os.Create(sampleConfigPath)
+func serveFiles() gin.HandlerFunc {
+	folder, err := fs.Sub(frontendFolder, "frontend/dist")
 	if err != nil {
-		log.Printf("Cannot create %v: %v\n", sampleConfigPath, err)
-		return
-	}
-	defer file.Close()
-
-	sampleConfig := newSampleConfig()
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
-	err = encoder.Encode(sampleConfig)
-	if err == nil {
-		log.Printf("Cannot write to %v: %v\n", sampleConfigPath, err)
-		return
-	}
-}
-
-func readConfigOrExit() Config {
-	_, err := os.Stat(configPath)
-	if err != nil {
-		log.Printf(
-			"Please configure monitoring in %v. You can use %v as reference. Error: %v\n",
-			configPath, sampleConfigPath, err)
-		os.Exit(1)
+		log.Fatalln(err)
 	}
 
-	file, err := os.Open(configPath)
-	if err != nil {
-		log.Printf("Cannot read %v: %v\n", configPath, err)
-		os.Exit(1)
+	return func(c *gin.Context) {
+		path := c.Request.URL.Path
+		c.FileFromFS(path, http.FS(folder))
 	}
-	defer file.Close()
-
-	var config Config
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&config)
-	if err != nil {
-		log.Printf("Cannot read %v as JSON: %v\n", configPath, err)
-		os.Exit(1)
-	}
-
-	return config
 }
