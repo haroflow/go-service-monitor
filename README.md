@@ -3,6 +3,8 @@ Service monitor and status page.
 
 Monitors for HTTP/HTTPS (200 OK), TCP ports and DNS IP queries.
 
+![image](https://github.com/haroflow/go-service-monitor/assets/4776931/9458f371-bea7-4861-b6b2-f28a7532eeb5)
+
 # Requirements
 
 - Go 1.18+. Tested on 1.20.5.
