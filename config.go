@@ -37,6 +37,7 @@ type TCPConfig struct {
 type DNSConfig struct {
 	DisplayName string `json:"displayName"`
 	Address     string `json:"address"`
+	Server      string `json:"server"`
 	// Interval int
 }
 
@@ -55,9 +56,9 @@ func newSampleConfig() Config {
 				{DisplayName: "Cloudflare DNS Port 53", Address: "1.1.1.1", Port: 53, Timeout: 15},
 			},
 			DNS: []DNSConfig{
-				{DisplayName: "Google A Record", Address: "google.com"},
-				{DisplayName: "Amazon A Record", Address: "amazon.com"},
-				{DisplayName: "Whois A Record", Address: "whois.com"},
+				{DisplayName: "Google A Record", Address: "google.com", Server: "1.1.1.1"},
+				{DisplayName: "Amazon A Record", Address: "amazon.com", Server: "8.8.8.8"},
+				{DisplayName: "Whois A Record", Address: "whois.com", Server: ""},
 			},
 		},
 	}

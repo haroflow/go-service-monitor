@@ -34,6 +34,7 @@ type TCPCheck struct {
 type DNSCheck struct {
 	DisplayName string `json:"displayName"`
 	Address     string `json:"address"`
+	Server      string `json:"server"`
 	Status      bool   `json:"status"`
 	// Server string
 }
@@ -64,6 +65,7 @@ func getServiceMonitorFromConfig(config Config) ServiceMonitor {
 		var dnsCheck = DNSCheck{
 			DisplayName: dns.DisplayName,
 			Address:     dns.Address,
+			Server:      dns.Server,
 			Status:      false,
 		}
 		serviceMonitor.DNSChecks = append(serviceMonitor.DNSChecks, dnsCheck)
@@ -78,7 +80,7 @@ func monitor(serviceMonitor *ServiceMonitor) { // TODO parallelize
 
 		for i := range serviceMonitor.HTTPChecks {
 			http := &serviceMonitor.HTTPChecks[i]
-			err := lib.TestHTTPEndpoint(http.Address, http.Timeout)
+			err := lib.CheckHTTPEndpoint(http.Address, http.Timeout)
 			if err != nil {
 				http.Status = false
 				log.Printf("HTTP FAIL | %+v | ERR: %v\n", http, err)
@@ -90,7 +92,7 @@ func monitor(serviceMonitor *ServiceMonitor) { // TODO parallelize
 
 		for i := range serviceMonitor.TCPChecks {
 			tcp := &serviceMonitor.TCPChecks[i]
-			err := lib.TestTCPEndpoint(tcp.Address, tcp.Port, tcp.Timeout)
+			err := lib.CheckTCPEndpoint(tcp.Address, tcp.Port, tcp.Timeout)
 			if err != nil {
 				tcp.Status = false
 				log.Printf("TCP FAIL | %+v | ERR: %v\n", tcp, err)
@@ -102,7 +104,7 @@ func monitor(serviceMonitor *ServiceMonitor) { // TODO parallelize
 
 		for i := range serviceMonitor.DNSChecks {
 			dnsCheck := &serviceMonitor.DNSChecks[i]
-			err := lib.TestDNSResponse(dnsCheck.Address)
+			err := lib.CheckDNSResponse(dnsCheck.Address, dnsCheck.Server)
 			if err != nil {
 				dnsCheck.Status = false
 				log.Printf("DNS FAIL | %+v | ERR: %v\n", dnsCheck, err)
