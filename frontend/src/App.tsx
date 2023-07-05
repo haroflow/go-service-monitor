@@ -54,12 +54,12 @@ function App() {
             </p>
 
             <div className="mt-3 divide-y">
-              {data.httpChecks.map(c =>
-                <StatusRow type="http" displayName={c.displayName} status={c.status} />)}
-              {data.tcpChecks.map(c =>
-                <StatusRow type="tcp" displayName={c.displayName} status={c.status} />)}
-              {data.dnsChecks.map(c =>
-                <StatusRow type="dns" displayName={c.displayName} status={c.status} />)}
+              {data.httpChecks?.map(c =>
+                <StatusRow key={`http_${c.displayName}`} displayName={c.displayName} status={c.status} />)}
+              {data.tcpChecks?.map(c =>
+                <StatusRow key={`tcp_${c.displayName}`} displayName={c.displayName} status={c.status} />)}
+              {data.dnsChecks?.map(c =>
+                <StatusRow key={`dns_${c.displayName}`} displayName={c.displayName} status={c.status} />)}
             </div>
           </>
         ) : null}
@@ -77,13 +77,11 @@ function Header() {
 }
 
 function StatusRow(props: {
-  type: string,
   displayName: string,
   status: boolean
 }) {
-  // FIXME "key" is not working
   return (
-    <div key={`${props.type}_${props.displayName}`} className="p-2 grid grid-cols-2">
+    <div className="p-2 grid grid-cols-2">
       <span>{props.displayName}</span>
       <span><StatusLabel ok={props.status} /></span>
     </div>

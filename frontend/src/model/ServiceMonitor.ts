@@ -1,9 +1,9 @@
 export interface ServiceMonitor {
 	lastCheck: string
 	lastCheckDate: Date
-	httpChecks: HTTPChecks[]
-	tcpChecks: TCPChecks[]
-	dnsChecks: DNSChecks[]
+	httpChecks?: HTTPChecks[]
+	tcpChecks?: TCPChecks[]
+	dnsChecks?: DNSChecks[]
 }
 
 export interface HTTPChecks {
