@@ -10,13 +10,14 @@ const configPath string = "config.json"
 const sampleConfigPath string = "sample.config.json"
 
 type Config struct {
-	Monitors MonitorsConfig `json:"monitors"`
+	Monitors      MonitorsConfig       `json:"monitors"`
+	Notifications *NotificationsConfig `json:"notifications,omitempty"`
 }
 
 type MonitorsConfig struct {
-	HTTP []HTTPConfig `json:"http"`
-	TCP  []TCPConfig  `json:"tcp"`
-	DNS  []DNSConfig  `json:"dns"`
+	HTTP []HTTPConfig `json:"http,omitempty"`
+	TCP  []TCPConfig  `json:"tcp,omitempty"`
+	DNS  []DNSConfig  `json:"dns,omitempty"`
 }
 
 type HTTPConfig struct {
@@ -29,7 +30,7 @@ type HTTPConfig struct {
 type TCPConfig struct {
 	DisplayName string `json:"displayName"`
 	Address     string `json:"address"`
-	Port        int16  `json:"port"`
+	Port        uint16 `json:"port"`
 	Timeout     int    `json:"timeout"`
 	// Interval int
 }
@@ -39,6 +40,21 @@ type DNSConfig struct {
 	Address     string `json:"address"`
 	Server      string `json:"server"`
 	// Interval int
+}
+
+type NotificationsConfig struct {
+	Email *NotificationsEmailConfig `json:"email,omitempty"`
+	// Discord NotificationsDiscordConfig `json:"discord,omitempty"`
+}
+
+type NotificationsEmailConfig struct {
+	Host     string   `json:"host"`
+	Port     uint16   `json:"port"`
+	Username string   `json:"username"`
+	Password string   `json:"password"`
+	To       []string `json:"to"`
+	// Title string
+	// MessageTemplate string
 }
 
 func newSampleConfig() Config {
@@ -59,6 +75,15 @@ func newSampleConfig() Config {
 				{DisplayName: "Google A Record", Address: "google.com", Server: "1.1.1.1"},
 				{DisplayName: "Amazon A Record", Address: "amazon.com", Server: "8.8.8.8"},
 				{DisplayName: "Whois A Record", Address: "whois.com", Server: ""},
+			},
+		},
+		Notifications: &NotificationsConfig{
+			Email: &NotificationsEmailConfig{
+				Host:     "smtp.gmail.com",
+				Port:     587,
+				Username: "your@gmail.com",
+				Password: "yourpassword",
+				To:       []string{"recipient@email.com"},
 			},
 		},
 	}

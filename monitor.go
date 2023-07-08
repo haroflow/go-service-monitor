@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -26,7 +27,7 @@ type HTTPCheck struct {
 type TCPCheck struct {
 	DisplayName string `json:"displayName"`
 	Address     string `json:"address"`
-	Port        int16  `json:"port"`
+	Port        uint16 `json:"port"`
 	Status      bool   `json:"status"`
 	Timeout     int    `json:"timeout"`
 }
@@ -74,7 +75,8 @@ func getServiceMonitorFromConfig(config Config) ServiceMonitor {
 	return serviceMonitor
 }
 
-func monitor(serviceMonitor *ServiceMonitor) { // TODO parallelize
+func monitor(config Config, serviceMonitor *ServiceMonitor) { // TODO parallelize
+	firstCheck := true
 	for {
 		serviceMonitor.LastCheck = time.Now()
 
@@ -82,9 +84,15 @@ func monitor(serviceMonitor *ServiceMonitor) { // TODO parallelize
 			http := &serviceMonitor.HTTPChecks[i]
 			err := lib.CheckHTTPEndpoint(http.Address, http.Timeout)
 			if err != nil {
+				if http.Status && !firstCheck {
+					notify(config, http.DisplayName, false)
+				}
 				http.Status = false
 				log.Printf("HTTP FAIL | %+v | ERR: %v\n", http, err)
 			} else {
+				if !http.Status && !firstCheck {
+					notify(config, http.DisplayName, true)
+				}
 				http.Status = true
 				log.Printf("HTTP OK | %+v", http)
 			}
@@ -94,26 +102,69 @@ func monitor(serviceMonitor *ServiceMonitor) { // TODO parallelize
 			tcp := &serviceMonitor.TCPChecks[i]
 			err := lib.CheckTCPEndpoint(tcp.Address, tcp.Port, tcp.Timeout)
 			if err != nil {
+				if tcp.Status && !firstCheck {
+					notify(config, tcp.DisplayName, false)
+				}
 				tcp.Status = false
 				log.Printf("TCP FAIL | %+v | ERR: %v\n", tcp, err)
 			} else {
+				if !tcp.Status && !firstCheck {
+					notify(config, tcp.DisplayName, true)
+				}
 				tcp.Status = true
 				log.Printf("TCP OK | %+v", tcp)
 			}
 		}
 
 		for i := range serviceMonitor.DNSChecks {
-			dnsCheck := &serviceMonitor.DNSChecks[i]
-			err := lib.CheckDNSResponse(dnsCheck.Address, dnsCheck.Server)
+			dns := &serviceMonitor.DNSChecks[i]
+			err := lib.CheckDNSResponse(dns.Address, dns.Server)
 			if err != nil {
-				dnsCheck.Status = false
-				log.Printf("DNS FAIL | %+v | ERR: %v\n", dnsCheck, err)
+				if dns.Status && !firstCheck {
+					notify(config, dns.DisplayName, false)
+				}
+				dns.Status = false
+				log.Printf("DNS FAIL | %+v | ERR: %v\n", dns, err)
 			} else {
-				dnsCheck.Status = true
-				log.Printf("DNS OK | %+v", dnsCheck)
+				if !dns.Status && !firstCheck {
+					notify(config, dns.DisplayName, true)
+				}
+				dns.Status = true
+				log.Printf("DNS OK | %+v", dns)
 			}
 		}
 
+		firstCheck = false
 		time.Sleep(5 * time.Second)
+	}
+}
+
+func notify(config Config, displayName string, status bool) {
+	notifications := config.Notifications
+	if notifications == nil {
+		return
+	}
+
+	emailConfig := notifications.Email
+	if emailConfig != nil {
+		icon := "🔴"
+		newStatus := "down"
+		if status {
+			icon = "🟢"
+			newStatus = "up"
+		}
+
+		err := sendMail(
+			emailConfig.Host,
+			emailConfig.Port,
+			emailConfig.Username,
+			emailConfig.Password,
+			fmt.Sprintf("go-service-monitor | %v '%v' is %v", icon, displayName, newStatus),
+			fmt.Sprintf("'%v' is %v", displayName, newStatus),
+			emailConfig.To,
+		)
+		if err != nil {
+			log.Printf("EMAIL service: %v error: %v", displayName, err)
+		}
 	}
 }

@@ -13,13 +13,11 @@ import (
 var frontendFolder embed.FS
 
 func main() {
-	// TODO email configuration
-	// TODO discord webhook configuration
 	createSampleConfig()
 	config := readConfigOrExit()
 	serviceMonitor := getServiceMonitorFromConfig(config)
 
-	go monitor(&serviceMonitor)
+	go monitor(config, &serviceMonitor)
 
 	controller := ApiController{
 		serviceMonitor: &serviceMonitor,

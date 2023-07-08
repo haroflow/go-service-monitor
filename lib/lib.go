@@ -38,7 +38,7 @@ func CheckHTTPEndpoint(address string, timeoutSeconds int) error {
 
 // CheckTCPEndpoint sends a TCP request to the specified address and port,
 // with a default timeout of 10 seconds.
-func CheckTCPEndpoint(address string, port int16, timeoutSeconds int) error {
+func CheckTCPEndpoint(address string, port uint16, timeoutSeconds int) error {
 	timeout := time.Duration(timeoutSeconds) * time.Second
 	dialer := net.Dialer{
 		Timeout: timeout,
